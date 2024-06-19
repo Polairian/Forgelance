@@ -21,6 +21,7 @@ def LanceIncendiaire():
     BuffLanceIncendiaireTotal = 0
     return
 
+# Sort Numéro 0
 def LanceAIncendie():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -34,7 +35,8 @@ def LanceAIncendie():
             LanceIncendiaire()
     PA -= 3
     return
-
+    
+# Sort Numéro 1
 def MoulinRouge():
     
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -46,6 +48,7 @@ def MoulinRouge():
     PA -= 3
     return
 
+# Sort Numéro 2
 def Fente():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -57,6 +60,7 @@ def Fente():
     PA -= 2
     return
 
+# Sort Numéro 3
 def FerRouge():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -68,6 +72,7 @@ def FerRouge():
     PA -= 3
     return
 
+# Sort Numéro 4
 def EstocBrulant():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -79,6 +84,7 @@ def EstocBrulant():
     PA -= 3    
     return
 
+# Sort Numéro 5
 def Muspel():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
@@ -91,6 +97,7 @@ def Muspel():
     PA -= 4
     return
 
+# Sort Numéro 6
 def Maelstom():
 
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
