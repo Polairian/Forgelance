@@ -49,9 +49,9 @@ def LanceIncendiaire():
 
 #ça pourrait être moins lourd ? de ne passer que la moyenne en param et pas une liste, mais beaucoup moins lisible
 
-def apply_spell(dmg_range,buffCoef=1,Muspel=False):
+def apply_spell(dmg_range,critChance,buffCoef=1,Muspel=False):
     global Lance, BuffLanceIncendiaireTotal
-    currDmg = np.average(dmg_range)
+    currDmg = np.average(dmg_range[:2])* (1-(critChance/100)) + np.average(dmg_range[2:])* critChance/100
     if buffCoef == 0 and Lance:
         currDmg+=LanceIncendiaire()
     elif not Lance and not Muspel:
@@ -61,27 +61,27 @@ def apply_spell(dmg_range,buffCoef=1,Muspel=False):
         
 #0
 def LanceAIncendie(): #proc
-    return apply_spell([23,26],0)
+    return apply_spell([23,26,28,31],10,0)
     
 def MoulinRouge(): #B1
-    return apply_spell([28,32])
+    return apply_spell([28,32,34,38],15)
   
 def Fente(): #B1
-    return apply_spell([12,14])
+    return apply_spell([12,14,15,18],5)
 
 def FerRouge(): #B0.5
-    return apply_spell([27,30],0.5)
+    return apply_spell([27,30,32,36],20,0.5)
 
 def EstocBrulant():#B1
-    return apply_spell([25,28])
+    return apply_spell([25,28,30,34],10)
 
 #Muspel proc mais n'applique pas
 def Muspel():
-    return apply_spell([31,35],0,Muspel=True)
+    return apply_spell([31,35,37,42],20,0,Muspel=True)
 
 #6
 def Maelstom(): #Proc
-    return apply_spell([16,19],0)
+    return apply_spell([29,32,35,38],10,0)
 
 def buildTree(currStep):
     #On regarde quel(s) sorts on peut lancer PA/lancer max
@@ -120,7 +120,7 @@ def meilleurChemin(currNode):
 # Main
 # =============
 
-SPELLREQ = {0 :{"id" : 0, "fct" :LanceAIncendie, "name" : "LanceAIncendie","pa" : 3 ,"max" : 3 },\
+SPELLREQ = {0 :{"id" : 0, "fct" :LanceAIncendie, "name" : "LanceAIncendie","pa" : 3 ,"max" : 2 },\
             1 :{"id" : 1, "fct" :MoulinRouge, "name" : "MoulinRouge","pa" : 3,"max" :1},\
             2 :{"id" : 2, "fct" :Fente, "name" : "Fente","pa" : 2,"max" :1},\
             3 :{"id" : 3, "fct" :FerRouge, "name" : "FerRouge","pa" : 3,"max" :2},\
