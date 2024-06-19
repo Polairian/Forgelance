@@ -17,7 +17,7 @@ def LanceIncendiaire():
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
 
     Lance = False
-    DSorts += BuffLanceIncendiaireTotal + 20
+    DSorts += BuffLanceIncendiaireTotal + (18+20)/2
     BuffLanceIncendiaireTotal = 0
     return
 
