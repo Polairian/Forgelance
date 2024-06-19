@@ -5,7 +5,32 @@ import numpy as np
 # La variable "Lance" correspond à cet état, si Lance = False, l'ennemi n'a pas l'état
 
 # Nombre d'ennemis*4 que vous touchez avec les sorts de buff de la forgelance (pour chaque ennemis touché, Lanceincendiaire a ses dégats de bases augmentés de 4 jusqu'au prochain proc) 
-BuffLanceIncendiaire = 4
+BUFFLANCEINCENDIAIRE = 4
+
+class Spell:
+    #Le coup en PA pour savoir si on continue
+    #L'id du sort
+    #Les dmg
+    #Les enfants
+    def __init__(self, dmg, cost, name):
+        self.name = name
+        self.dmg = dmg
+        self.cost = cost
+        self.children = []
+
+    def add_child(self, child_node):
+        self.children.append(child_node)
+
+
+class Tour:
+    def __init__(self, root):
+        self.root = root
+
+def print_tree(node, level=0):
+    print(' ' * level+ node.name)
+    for child in node.children:
+        print_tree(child, level + 1)
+
 
 def max_value(inputlist):
     return max([sublist[-1] for sublist in inputlist])
@@ -14,81 +39,61 @@ def max_value(inputlist):
 
 #Passive proc : 
 def LanceIncendiaire():
+    global Lance, DSorts, BUFFLANCEINCENDIAIRE, BuffLanceIncendiaireTotal, PA
     
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
     Lance = False
+    tmp = BuffLanceIncendiaireTotal + np.average([18,20])
     BuffLanceIncendiaireTotal = 0
-    return BuffLanceIncendiaireTotal + (18+20)/2
+    return tmp
 
 #ça pourrait être moins lourd ? de ne passer que la moyenne en param et pas une liste, mais beaucoup moins lisible
 
 def apply_spell(pa_cost,dmg_range,buffCoef=1,Muspel=False):
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
+    global Lance, DSorts, BuffLanceIncendiaireTotal, PA
     if pa_cost >= PA:
         #Add damage
         DSorts += np.average(dmg_range)
         
-        #Proc if lance or give it (not for Muspel)
-        if not Lance and not Muspel: Lance = True
-        elif Lance: DSorts+=LanceIncendiaire()
+        #On proc que si on est à buff = 0
+        if buffCoef == 0 and Lance:
+            DSorts+=LanceIncendiaire()
+        elif not Lance and not Muspel:
+            Lance = True
         
-        #Buff the lanceBuff
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaireTotal*buffCoef
+        #Buff the lanceBuff if needed, sometime it can be 0 but anyway
+        BuffLanceIncendiaireTotal += BUFFLANCEINCENDIAIRE*buffCoef
         #Sub PA cost
         PA -= pa_cost
         
-        
+def LanceAIncendie(): #proc
+    apply_spell(3,[23,26],0)
     
-
-# Sort Numéro 0
-def LanceAIncendie():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (23+26)/2 # moyenne
-        if not Lance:
-            Lance = True
-        elif Lance:
-            LanceIncendiaire()
-    PA -= 3
-    return
-    
-# Sort Numéro 1
-def MoulinRouge():
+def MoulinRouge(): #B1
    apply_spell(3,[28,32])
    #I don't like returning nothing but if we keep this struct...
 
-# Sort Numéro 2
-def Fente():
+def Fente(): #B1
     apply_spell(2,[12,14])
 
-# Sort Numéro 3
-def FerRouge():
+def FerRouge(): #B0.5
     apply_spell(3,[27,30],0.5)
 
-
-# Sort Numéro 4
-def EstocBrulant():
+def EstocBrulant():#B1
     apply_spell(3,[25,28])
 
-
-# Sort Numéro 5
 #Muspel proc mais n'applique pas
 def Muspel():
     apply_spell(3,[31,35],0,Muspel=True)
 
 # Sort Numéro 6
-def Maelstom():
+def Maelstom(): #Proc
     apply_spell(3,[16,19],0)
-
 
 
 # =============
 # Main
 # =============
-Tour = []
+Tour1 = []
 TourFiltre = []
 
 # Liste de fonctions correspondantes aux sorts feu de la Forgelance
@@ -99,6 +104,12 @@ Sorts = (LanceAIncendie,MoulinRouge,Fente,FerRouge,EstocBrulant,Muspel,Maelstom)
 # Problèmes majeurs: 
 # Besoin de "sauvegarder" les Pa, Dégat, les Buff et l'état de la Lance à un moment donné
 # Besoin de faire une boucle par sorts lancé, serait plus pratique si ça détectait, avec les PA restants, s'il est possible de lancer un sort (utile si on se fait Re Pa)
+
+
+
+# Nouveau format de sortie:
+
+# Une grande liste
 
 for i in range(0,len(Sorts)):
 
@@ -153,16 +164,16 @@ for i in range(0,len(Sorts)):
                     Sorts[l]()
 
                     if PA>=0:
-                        Tour.append((i,j,k,l,DSorts))
+                        Tour1.append((i,j,k,l,DSorts))
                     else:
-                        Tour.append((i,j,k,DSortsE3))
+                        Tour1.append((i,j,k,DSortsE3))
 
             elif PA == 0:
 
-                Tour.append((i,j,k,DSorts))
+                Tour1.append((i,j,k,DSorts))
 
 # Sert a retirer les séquences de sorts où un sort a plus d'utilisation que sa limite par tour
-for sublist in Tour:
+for sublist in Tour1:
     NBLAI = sublist.count(0)
     NBMORO = sublist.count(1)
     NBFENT = sublist.count(2)
@@ -180,4 +191,30 @@ GrosDégat = max_value(TourFiltre)
 for sublist in TourFiltre:
     if GrosDégat in sublist:
         print(sublist)
+
+
+root = Spell("Root")
+child_a = Spell("A")
+child_b = Spell("B")
+child_a1 = Spell("A1")
+child_a2 = Spell("A2")
+child_b1 = Spell("B1")
+child_a1_1 = Spell("A1.1")
+child_a1_2 = Spell("A1.2")
+child_a2_1 = Spell("A2.1")
+child_b1_1 = Spell("B1.1")
+
+root.add_child(child_a)
+root.add_child(child_b)
+child_a.add_child(child_a1)
+child_a.add_child(child_a2)
+child_b.add_child(child_b1)
+child_a1.add_child(child_a1_1)
+child_a1.add_child(child_a1_2)
+child_a2.add_child(child_a2_1)
+child_b1.add_child(child_b1_1)
+
+tree = Tour(root)
+
+print_tree(tree.root)
 
