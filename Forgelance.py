@@ -105,7 +105,7 @@ def Maelstom():
     if PA >= 3:
         
         
-        DSorts += (25+28)/2
+        DSorts += (16+19)/2
         if Lance == False:
             Lance = True
         elif Lance == True:
