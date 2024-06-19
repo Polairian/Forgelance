@@ -12,20 +12,22 @@ import numpy as np
 # Nombre d'ennemis*4 que vous touchez avec les sorts de buff de la forgelance (pour chaque ennemis touché, Lanceincendiaire a ses dégats de bases augmentés de 4 jusqu'au prochain proc) 
 BUFFLANCEINCENDIAIRE = 4
 MINSPELLCOST = 2
-Lance = False
 BuffLanceIncendiaireTotal = 0
 nbraff = 3
+toDeLance = False
+toLance = False
 
 
 # =============
 
 class Step:
-    def __init__(self, dmg, name,paRem,lancerTrack):
+    def __init__(self, dmg, name,paRem,lancerTrack,lance):
         self.name = name
         self.dmg = dmg
         self.paRem = paRem
         self.children = []
         self.lancerTrack = lancerTrack
+        self.lance = lance
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -41,50 +43,51 @@ def print_tree(node, currDmg, level=0):
 
 #Passive proc : 
 def LanceIncendiaire():
-    global Lance, BUFFLANCEINCENDIAIRE, BuffLanceIncendiaireTotal
-    Lance = False
-    tmp = BuffLanceIncendiaireTotal + np.average([18,20])
-    BuffLanceIncendiaireTotal = 0
-    return tmp
+    global BuffLanceIncendiaireTotal
+    return (BuffLanceIncendiaireTotal + np.average([18,20]))
 
 #ça pourrait être moins lourd ? de ne passer que la moyenne en param et pas une liste, mais beaucoup moins lisible
 
-def apply_spell(dmg_range,critChance,buffCoef=1,Muspel=False):
-    global Lance, BuffLanceIncendiaireTotal
+def apply_spell(lance,dmg_range,critChance,buffCoef=1,Muspel=False):
+    global BuffLanceIncendiaireTotal, toDeLance,toLance
     currDmg = np.average(dmg_range[:2])* (1-(critChance/100)) + np.average(dmg_range[2:])* critChance/100
-    if buffCoef == 0 and Lance:
-        currDmg+=LanceIncendiaire()
-    elif not Lance and not Muspel:
-        Lance = True
+    #print(currDmg)
+    if buffCoef == 0 and lance:
+        toDeLance = True
+        BuffLanceIncendiaireTotal=0
+        currDmg += LanceIncendiaire()
+    elif not lance and not Muspel:
+        toLance = True
     BuffLanceIncendiaireTotal += BUFFLANCEINCENDIAIRE*buffCoef
     return currDmg
         
 #0
-def LanceAIncendie(): #proc
-    return apply_spell([23,26,28,31],10,0)
+def LanceAIncendie(lance): #proc
+    return apply_spell(lance,[23,26,28,31],10,0)
     
-def MoulinRouge(): #B1
-    return apply_spell([28,32,34,38],15)
+def MoulinRouge(lance): #B1
+    return apply_spell(lance,[28,32,34,38],15)
   
-def Fente(): #B1
-    return apply_spell([12,14,15,18],5)
+def Fente(lance): #B1
+    return apply_spell(lance,[12,14,15,18],5)
 
-def FerRouge(): #B0.5
-    return apply_spell([27,30,32,36],20,0.5)
+def FerRouge(lance): #B0.5
+    return apply_spell(lance,[27,30,32,36],20,0.5)
 
-def EstocBrulant():#B1
-    return apply_spell([25,28,30,34],10)
+def EstocBrulant(lance):#B1
+    return apply_spell(lance,[25,28,30,34],10)
 
 #Muspel proc mais n'applique pas
-def Muspel():
-    return apply_spell([31,35,37,42],20,0,Muspel=True)
+def Muspel(lance):
+    return apply_spell(lance,[31,35,37,42],20,0,Muspel=True)
 
 #6
-def Maelstom(): #Proc
-    return apply_spell([29,32,35,38],10,0)
+def Maelstom(lance): #Proc
+    return apply_spell(lance,[29,32,35,38],10,0)
 
 def buildTree(currStep):
     #On regarde quel(s) sorts on peut lancer PA/lancer max
+    global toDeLance, toLance
     toBeLaunch = []
     for key,value in SPELLREQ.items():
         if currStep.paRem >= value["pa"] and currStep.lancerTrack[key] < value["max"]:
@@ -93,12 +96,20 @@ def buildTree(currStep):
     for spell in toBeLaunch:
         #On a lancé un sort, du coup on le prépare et on ajoute
         thisSpell = spell
-        spellDmg = thisSpell["fct"]()
+        spellRes = thisSpell["fct"](currStep.lance)
+        #Retour de fonction
+        locallance = False
+        if toDeLance :
+            locallance = False
+            toDeLance = False
+        if toLance :
+            locallance = True
+            toLance = False
         name = thisSpell["name"]
         paRem = currStep.paRem - thisSpell["pa"]
         lancerTrack = list(currStep.lancerTrack)
         lancerTrack[thisSpell["id"]]+=1
-        thisStep = Step(spellDmg,name,paRem,lancerTrack)
+        thisStep = Step(spellRes,name,paRem,lancerTrack,locallance)
         #On ajoute ce choix au noeud actuel
         currStep.add_child(thisStep)
         
@@ -134,7 +145,7 @@ pa = input("Nombre de PA ce tour : ")
 aff = input("Affichage simple(s) ou complet (c) : ")
 if aff == 'c':
     nbraff = int(input("Combien de meilleur score : "))
-strat = Step(0,"Start",int(pa),[0,0,0,0,0,0,0])
+strat = Step(0,"Start",int(pa),[0,0,0,0,0,0,0],False)
 buildTree(strat)
 if aff == 'c':
     print_tree(strat,0)
