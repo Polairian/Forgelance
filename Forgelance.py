@@ -41,8 +41,7 @@ def print_tree(node, currDmg, level=0):
 
 #Passive proc : 
 def LanceIncendiaire():
-    global Lance, DSorts, BUFFLANCEINCENDIAIRE, BuffLanceIncendiaireTotal, PA
-    
+    global Lance, BUFFLANCEINCENDIAIRE, BuffLanceIncendiaireTotal
     Lance = False
     tmp = BuffLanceIncendiaireTotal + np.average([18,20])
     BuffLanceIncendiaireTotal = 0
@@ -52,15 +51,11 @@ def LanceIncendiaire():
 
 def apply_spell(dmg_range,buffCoef=1,Muspel=False):
     global Lance, BuffLanceIncendiaireTotal
-    #Add damage
     currDmg = np.average(dmg_range)
-    #On proc que si on est à buff = 0
     if buffCoef == 0 and Lance:
         currDmg+=LanceIncendiaire()
     elif not Lance and not Muspel:
         Lance = True
-    
-    #Buff the lanceBuff if needed, sometime it can be 0 but anyway
     BuffLanceIncendiaireTotal += BUFFLANCEINCENDIAIRE*buffCoef
     return currDmg
         
@@ -114,13 +109,10 @@ def buildTree(currStep):
         
 def meilleurChemin(currNode): 
     global nbraff
-    if not currNode.children:
-        return [(currNode.dmg, [currNode.name])]
+    if not currNode.children: return [(currNode.dmg, [currNode.name])]
     best_paths = []
     for child in currNode.children:
-        child_paths = meilleurChemin(child)
-        for child_sum, child_path in child_paths:
-            best_paths.append((child_sum, [currNode.name] + child_path))
+        for child_sum, child_path in meilleurChemin(child): best_paths.append((child_sum, [currNode.name] + child_path))
     best_paths = sorted(best_paths, key=lambda x: x[0], reverse=True)[:nbraff]
     return [(currNode.dmg + s, p) for s, p in best_paths]
 
@@ -139,11 +131,12 @@ SPELLREQ = {0 :{"id" : 0, "fct" :LanceAIncendie, "name" : "LanceAIncendie","pa" 
 
 
 pa = input("Nombre de PA ce tour : ")
-if input("Affichage simple(s) ou complet (c) : ") == 'c':
+aff = input("Affichage simple(s) ou complet (c) : ")
+if aff == 'c':
     nbraff = int(input("Combien de meilleur score : "))
 strat = Step(0,"Start",int(pa),[0,0,0,0,0,0,0])
 buildTree(strat)
-
-#print_tree(strat,0)
+if aff == 'c':
+    print_tree(strat,0)
 print(meilleurChemin(strat))
 
