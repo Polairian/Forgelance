@@ -25,7 +25,7 @@ class Step:
         self.dmg = dmg
         self.paRem = paRem
         self.children = []
-        self.lancerTrack = lancerTrack
+        self.lancerTrack = list(lancerTrack)
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -104,7 +104,7 @@ def buildTree(currStep):
         
         #On regarde si on pourra en lancer au prochain tour à partir de ce step la
         #(Il est vrai que même si seul un est possible on fait un for/if sur 7 index mais blc)
-        if not (thisStep.paRem < MINSPELLCOST):
+        if not (paRem < MINSPELLCOST):
             buildTree(thisStep) #build tree from this step
         
 def meilleurChemin(currNode): 
@@ -121,12 +121,12 @@ def meilleurChemin(currNode):
 # =============
 
 SPELLREQ = {0 :{"id" : 0, "fct" :LanceAIncendie, "name" : "LanceAIncendie","pa" : 3 ,"max" : 3 },\
-            1 :{"id" : 1, "fct" : MoulinRouge, "name" : "MoulinRouge","pa" : 3,"max" :1},\
-            2 :{"id" : 2, "fct" : Fente, "name" : "Fente","pa" : 2,"max" :1},\
-            3 :{"id" : 3, "fct" : FerRouge, "name" : "FerRouge","pa" : 3,"max" :2},\
-            4 :{"id" : 4, "fct" : EstocBrulant, "name" : "EstocBrulant","pa" : 3,"max" :2},\
-            5 :{"id" : 5, "fct" : Muspel, "name" : "Muspel","pa" : 4,"max" :1},\
-            6 :{"id" : 6, "fct" : Maelstom, "name" : "Maelstom","pa" : 3,"max" :2},\
+            1 :{"id" : 1, "fct" :MoulinRouge, "name" : "MoulinRouge","pa" : 3,"max" :1},\
+            2 :{"id" : 2, "fct" :Fente, "name" : "Fente","pa" : 2,"max" :1},\
+            3 :{"id" : 3, "fct" :FerRouge, "name" : "FerRouge","pa" : 3,"max" :2},\
+            4 :{"id" : 4, "fct" :EstocBrulant, "name" : "EstocBrulant","pa" : 3,"max" :2},\
+            5 :{"id" : 5, "fct" :Muspel, "name" : "Muspel","pa" : 4,"max" :1},\
+            6 :{"id" : 6, "fct" :Maelstom, "name" : "Maelstom","pa" : 3,"max" :2},\
             }
 
 
