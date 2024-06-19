@@ -7,19 +7,38 @@ import numpy as np
 # Nombre d'ennemis*4 que vous touchez avec les sorts de buff de la forgelance (pour chaque ennemis touché, Lanceincendiaire a ses dégats de bases augmentés de 4 jusqu'au prochain proc) 
 BuffLanceIncendiaire = 4
 
-
 def max_value(inputlist):
     return max([sublist[-1] for sublist in inputlist])
 
 # Definition des différents sorts de la Forgelance
+
+#Passive proc : 
 def LanceIncendiaire():
     
     global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
     Lance = False
-    DSorts += BuffLanceIncendiaireTotal + (18+20)/2
     BuffLanceIncendiaireTotal = 0
-    return
+    return BuffLanceIncendiaireTotal + (18+20)/2
+
+#ça pourrait être moins lourd ? de ne passer que la moyenne en param et pas une liste, mais beaucoup moins lisible
+
+def apply_spell(pa_cost,dmg_range,buffCoef=1,Muspel=False):
+    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
+    if pa_cost >= PA:
+        #Add damage
+        DSorts += np.average(dmg_range)
+        
+        #Proc if lance or give it (not for Muspel)
+        if not Lance and not Muspel: Lance = True
+        elif Lance: DSorts+=LanceIncendiaire()
+        
+        #Buff the lanceBuff
+        BuffLanceIncendiaireTotal += BuffLanceIncendiaireTotal*buffCoef
+        #Sub PA cost
+        PA -= pa_cost
+        
+        
+    
 
 # Sort Numéro 0
 def LanceAIncendie():
@@ -28,91 +47,47 @@ def LanceAIncendie():
 
     if PA >= 3:
         
-        DSorts += (23+26)/2
-        if Lance == False:
+        DSorts += (23+26)/2 # moyenne
+        if not Lance:
             Lance = True
-        elif Lance == True:
+        elif Lance:
             LanceIncendiaire()
     PA -= 3
     return
     
 # Sort Numéro 1
 def MoulinRouge():
-    
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (28+32)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 3
-    return
+   apply_spell(3,[28,32])
+   #I don't like returning nothing but if we keep this struct...
 
 # Sort Numéro 2
 def Fente():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 2:
-        
-        DSorts += (12+14)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 2
-    return
+    apply_spell(2,[12,14])
 
 # Sort Numéro 3
 def FerRouge():
+    apply_spell(3,[27,30],0.5)
 
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (27+30)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire*0.5
-    PA -= 3
-    return
 
 # Sort Numéro 4
 def EstocBrulant():
+    apply_spell(3,[25,28])
 
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (25+28)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 3    
-    return
 
 # Sort Numéro 5
+#Muspel proc mais n'applique pas
 def Muspel():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 4:
-        
-        if Lance == True:
-            LanceIncendiaire()
-        DSorts += (31+35)/2
-    PA -= 4
-    return
+    apply_spell(3,[31,35],0,Muspel=True)
 
 # Sort Numéro 6
 def Maelstom():
+    apply_spell(3,[16,19],0)
 
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
 
-    if PA >= 3:
-        
-        
-        DSorts += (16+19)/2
-        if Lance == False:
-            Lance = True
-        elif Lance == True:
-            LanceIncendiaire()
-    PA -= 3        
-    return
 
+# =============
+# Main
+# =============
 Tour = []
 TourFiltre = []
 
@@ -205,3 +180,4 @@ GrosDégat = max_value(TourFiltre)
 for sublist in TourFiltre:
     if GrosDégat in sublist:
         print(sublist)
+
