@@ -25,7 +25,7 @@ class Step:
         self.dmg = dmg
         self.paRem = paRem
         self.children = []
-        self.lancerTrack = list(lancerTrack)
+        self.lancerTrack = lancerTrack
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -96,7 +96,7 @@ def buildTree(currStep):
         spellDmg = thisSpell["fct"]()
         name = thisSpell["name"]
         paRem = currStep.paRem - thisSpell["pa"]
-        lancerTrack = currStep.lancerTrack
+        lancerTrack = list(currStep.lancerTrack)
         lancerTrack[thisSpell["id"]]+=1
         thisStep = Step(spellDmg,name,paRem,lancerTrack)
         #On ajoute ce choix au noeud actuel
