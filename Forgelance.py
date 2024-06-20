@@ -71,6 +71,9 @@ def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=Fal
         elif not muspel:
             Lance = True
 
+    #if buff2:
+    #   stats.loc[buff2[0],buff2[1]] += buff2[2]
+
 Sorts = [LanceAIncendie, MoulinRouge, Fente, FerRouge, EstocBrulant, Muspel, Maelstom, Flamiche, Flamèche, Ebilition]
 limits = [3, 2, 2, 3, 3, 2, 3, 3, 5, 2]
 pa_costs = [3, 3, 2, 3, 3, 4, 3, 2, 2, 3]
