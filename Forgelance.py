@@ -7,7 +7,7 @@ import pandas as pd
 # =============
 
 BuffLanceIncendiaire = 4
-PA = 12
+PA = 13
 equipmentCritChance = 84
 stats = pd.DataFrame([['-', 450, 450, 460, 480, 435, '-'], [48, 83, 74, 57, 109, '-', 138]], ['Characteristics','Do'], ['Neutre','Terre', 'Feu', 'Eau', 'Air','Puissance/Dommages', 'Crit'])
 
@@ -17,12 +17,22 @@ stats = pd.DataFrame([['-', 450, 450, 460, 480, 435, '-'], [48, 83, 74, 57, 109,
 initial_state = (0, 0, 0, False)
 DSorts, Dégats, BuffLanceIncendiaireTotal, Lance = initial_state
 
+def LanceAIncendie(): apply_sort([23,26,28,31], 10, 'Feu', proc=True)
+def MoulinRouge(): apply_sort([28,32,34,38], 15, 'Feu', BuffLanceIncendiaire)
+def Fente(): apply_sort([12,14,16,18], 5, 'Feu', BuffLanceIncendiaire)
+def FerRouge(): apply_sort([27,30,32,36], 20, 'Feu', BuffLanceIncendiaire // 2)
+def EstocBrulant(): apply_sort([25,28,30,34], 10, 'Feu', BuffLanceIncendiaire)
+def Muspel(): apply_sort([31,35,37,42], 20, 'Feu', proc=True, muspel=True)
+def Maelstom(): apply_sort([29,32,35,38], 10, 'Feu', proc=True)
+
 def LanceIncendiaire():
     global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, stats
     Lance = False
     DSorts += BuffLanceIncendiaireTotal + 19  # (18+20)/2
     Dégats += (BuffLanceIncendiaireTotal + 19)* (stats.loc['Characteristics','Feu'] + stats.loc['Characteristics','Puissance/Dommages'])/ 100
     BuffLanceIncendiaireTotal = 0
+
+def Flamiche(): apply_sort([8,10,10,12],5)
 
 def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False):
     global Lance, DSorts, BuffLanceIncendiaireTotal, equipmentCritChance, Dégats, stats
@@ -37,13 +47,7 @@ def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=Fal
         elif not muspel:
             Lance = True
 
-def LanceAIncendie(): apply_sort([23,26,28,31], 10, 'Feu', proc=True)
-def MoulinRouge(): apply_sort([28,32,34,38], 15, 'Feu', BuffLanceIncendiaire)
-def Fente(): apply_sort([12,14,16,18], 5, 'Feu', BuffLanceIncendiaire)
-def FerRouge(): apply_sort([27,30,32,36], 20, 'Feu', BuffLanceIncendiaire // 2)
-def EstocBrulant(): apply_sort([25,28,30,34], 10, 'Feu', BuffLanceIncendiaire)
-def Muspel(): apply_sort([31,35,37,42], 20, 'Feu', proc=True, muspel=True)
-def Maelstom(): apply_sort([29,32,35,38], 10, 'Feu', proc=True)
+
 
 Sorts = [LanceAIncendie, MoulinRouge, Fente, FerRouge, EstocBrulant, Muspel, Maelstom]
 limits = [3, 2, 2, 3, 3, 2, 3]
@@ -67,11 +71,10 @@ def simulate_turns():
 
         for idx in seq:
             Sorts[idx]()
-        tours.append((*seq, DSorts, Dégats))
+        tours.append((*[Sorts[i].__name__ for i in seq], DSorts, Dégats))
 
     return tours
 
 tours = simulate_turns()
-
 tours.sort(key=lambda x:-x[-1])
 print(*tours[:5], sep='\n')
