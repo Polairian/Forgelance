@@ -27,8 +27,9 @@ def LanceIncendiaire():
 def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False):
     global Lance, DSorts, BuffLanceIncendiaireTotal, equipmentCritChance, Dégats, stats
     totalCritChance = critChance+equipmentCritChance if critChance+equipmentCritChance < 100 else 100
-    DSorts += np.average(damage_range[:2])* (1-(totalCritChance/100)) + np.average(damage_range[2:])* totalCritChance/100
-    Dégats += (np.average(damage_range[:2])* (1-(totalCritChance/100)) + np.average(damage_range[2:])* totalCritChance/100)* (stats.loc['Characteristics',Element] + stats.loc['Characteristics','Puissance/Dommages'])/ 100 +  stats.loc['Do',Element] + stats.loc['Do','Crit']* totalCritChance/ 100
+    calculatedDsorts = np.average(damage_range[:2])* (1-(totalCritChance/100)) + np.average(damage_range[2:])* totalCritChance/100
+    DSorts += calculatedDsorts
+    Dégats += calculatedDsorts* (stats.loc['Characteristics',Element] + stats.loc['Characteristics','Puissance/Dommages'])/ 100 +  stats.loc['Do',Element] + stats.loc['Do','Crit']* totalCritChance/ 100
     BuffLanceIncendiaireTotal += buff
     if proc:
         if Lance:
