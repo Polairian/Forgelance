@@ -1,14 +1,14 @@
 
 import numpy as np
 import pandas as pd
-
+import random as r
 # =============
 # CONST ZONE
 # =============
 
 BuffLanceIncendiaire = 4
 PA = 12
-statsIni = pd.DataFrame([['-', 450, 450, 460, 480, 435, 84], [48, 83, 74, 57, 109, '-', 138]], index = ['Characteristics','Do'], columns = ['Neutre','Terre', 'Feu', 'Eau', 'Air','Puissance/Dommages', 'Crit'])
+statsIni = pd.DataFrame([['-', 450, 450, 460, 480, 435, 84, 14], [48, 83, 74, 57, 109, '-', 138, '-']], index = ['Characteristics','Do'], columns = ['Neutre','Terre', 'Feu', 'Eau', 'Air','Puissance/Dommages', 'Crit', 'percentDist'])
 initial_state = (0, 0, 0, False, statsIni)
 DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, stats = initial_state
 
@@ -16,17 +16,12 @@ DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, stats = initial_state
 
 def spellDamage(damage_range, critChance): return(np.average(damage_range[:2])* (1-(critChance/100)) + np.average(damage_range[2:])* critChance/100)
 
-def calculatedMeanDamage(damage_range, critChance, Element):
-    global stats
-    return spellDamage(damage_range, critChance)* (stats.loc['Characteristics',Element] + stats.loc['Characteristics','Puissance/Dommages'])/ 100 +  stats.loc['Do',Element] + stats.loc['Do','Crit']* critChance/ 100
+def calculatedMeanDamage(damage_range, critChance, Element): 
+    return (spellDamage(damage_range, critChance)* (stats.loc['Characteristics',Element] + stats.loc['Characteristics','Puissance/Dommages'])/ 100 +  stats.loc['Do',Element] + stats.loc['Do','Crit']* critChance/ 100)* (stats.loc['Characteristics','percentDist']/100 + 1)
 
-def bestElement():
-    global stats
-    return stats.iloc[0, 1:5].idxmax()
-
-def worstElement():
-    global stats
-    return stats.iloc[0, 1:5].idxmin()
+def bestElement(): return stats.iloc[0, 1:5].idxmax()
+def worstElement(): return stats.iloc[0, 1:5].idxmin()
+def randomElement(): return r.choice(['Terre','Feu','Eau','Air'])
 
 # =============
 # SORTS FEUX
@@ -41,7 +36,7 @@ def Muspel(): apply_sort([31,35,37,42], 20, 'Feu', proc=True, muspel=True)
 def Maelstom(): apply_sort([29,32,35,38], 10, 'Feu', proc=True)
 
 def LanceIncendiaire():
-    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, stats
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats
     Lance = False
     DSorts += BuffLanceIncendiaireTotal + 19  # (18+20)/2
     Dégats += (BuffLanceIncendiaireTotal + 19)* (stats.loc['Characteristics','Feu'] + stats.loc['Characteristics','Puissance/Dommages'])/ 100
@@ -72,7 +67,9 @@ def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=Fal
             Lance = True
 
     #if buff2:
-    #   stats.loc[buff2[0],buff2[1]] += buff2[2]
+    #    stats.loc[buff2[0],buff2[1]] += buff2[2]
+
+
 
 Sorts = [LanceAIncendie, MoulinRouge, Fente, FerRouge, EstocBrulant, Muspel, Maelstom, Flamiche, Flamèche, Ebilition]
 limits = [3, 2, 2, 3, 3, 2, 3, 3, 5, 2]
