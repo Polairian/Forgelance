@@ -1,207 +1,148 @@
+
 import numpy as np
+import pandas as pd
+import random as r
+import matplotlib.pyplot as plt
 
-# La voie feu de la forgelance fonctionne autour du sort Lance Incendiaire, 3 des sorts permettent de poser et/ou retirer un état aux ennemis, lorsqu'on le retire, l'ennemi subit le sort Lance Incendiaire
-# Les dégats de Lance incendiaire sont augmenté par les autres sorts de la voie, et sont réinitialisé une fois que le sort à proc
-# La variable "Lance" correspond à cet état, si Lance = False, l'ennemi n'a pas l'état
+# =============
+# CONST ZONE
+# =============
 
-# Nombre d'ennemis*4 que vous touchez avec les sorts de buff de la forgelance (pour chaque ennemis touché, Lanceincendiaire a ses dégats de bases augmentés de 4 jusqu'au prochain proc) 
 BuffLanceIncendiaire = 4
+PA = 12
+statsIni = pd.DataFrame([[200,'-', 450, 450, 460, 480, 435, 84, 14], ['-',48, 83, 74, 57, 109, '-', 138, '-']], index = ['Characteristics','Do'], columns = ['Level','Neutre','Terre', 'Feu', 'Eau', 'Air','Puissance/Dommages', 'Crit', 'percentDist'])
+initial_state = (0, 0, 0, False, statsIni)
+DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, stats = initial_state
 
+# =============
 
-def max_value(inputlist):
-    return max([sublist[-1] for sublist in inputlist])
+def spellDamage(damage_range, critChance): return(np.average(damage_range[:2])* (1-(critChance/100)) + np.average(damage_range[2:])* critChance/100)
 
-# Definition des différents sorts de la Forgelance
+def calculatedMeanDamage(damage_range, critChance, Element): 
+    return (spellDamage(damage_range, critChance)* (stats.loc['Characteristics',Element] + stats.loc['Characteristics','Puissance/Dommages'])/ 100 +  stats.loc['Do',Element] + stats.loc['Do','Crit']* critChance/ 100)* (stats.loc['Characteristics','percentDist']/100 + 1)
+
+def bestElement(): return stats.iloc[0, 2:6].idxmax()
+def worstElement(): return stats.iloc[0, 2:6].idxmin()
+def randomElement(): return r.choice(['Terre','Feu','Eau','Air'])
+
+# =================
+# SORTS PAR PAIRES
+# =================
+
+def LanceDuLac(): apply_sort([22,25,26,30],10, 'Eau')
+def EpieuSismique(): apply_sort([26,29,31,36],15, 'Terre')
+
+def LancePierre(): apply_sort([25,28,30,34],10, 'Terre')
+def JavelotFoudre(): apply_sort([28,32,35,39],10, 'Eau')
+
+def LanceAIncendie(): apply_sort([23,26,28,31], 10, 'Feu', proc=True)
+def Degagement(): apply_sort([29,32,35,38], 15, 'Air', push = 4)
+
+def JavelyneDeMyr(): apply_sort([26,30,31,36],15, 'Air', push = 2)
+def FerRouge(): apply_sort([27,30,32,36], 20, 'Feu', BuffLanceIncendiaire // 2)
+
+def ChargeHeroique(): apply_sort([33,33,40,40],20, bestElement(), push = 4)
+
+def Effondrement(): apply_sort([20,22,24,26],15, 'Terre')
+def PluieDAirain(): apply_sort([19,21,23,25],15, 'Air')
+
+def TridenDeLaMer(): apply_sort([21,24,25,29],10, 'Eau')
+def MoulinRouge(): apply_sort([28,32,34,38], 15, 'Feu', BuffLanceIncendiaire)
+
+def EstocBrulant(): apply_sort([25,28,30,34], 10, 'Feu', BuffLanceIncendiaire)
+def Octave(): apply_sort([16,18,19,22],5, 'Eau')
+
+def VoleeDAirain(): apply_sort([22,25,26,30],10, 'Air', push = 2)
+def Soulevement(): apply_sort([29,33,35,40],15, 'Terre')
+
+def Balestra(): apply_sort([28,31,34,37],15, 'Eau')
+def MoulinAVent(): apply_sort([29,33,35,40],15, 'Air')
+
+def TalonDArgile(): apply_sort([14,16,17,19],5, 'Terre')
+def Fente(): apply_sort([12*0.85,14*0.85,16*0.85,18*0.85], 5, 'Feu', BuffLanceIncendiaire)
+
+def Kyrja(): apply_sort([28,32,34,38],15, bestElement())
+def Varja(): apply_sort([39,44,47,53],25, bestElement())
+
+def Maelstom(): apply_sort([29,32,35,38], 10, 'Feu', proc=True)
+def Ydra(): apply_sort([25,28,30,34],15, 'Terre')
+
+def LanceCyclone(): apply_sort([31,33,37,40],10, 'Air', push = 3)
+def Elding(): apply_sort([32,36,38,43],20, 'Eau')
+
+def Jormun(): apply_sort([30,34,36,41],5, 'Eau')
+def Muspel(): apply_sort([31,35,37,42], 20, 'Feu', proc=True, muspel=True)
+
+def TerreDuMilieu(): apply_sort([30,34,36,41],15, 'Terre')
+def Noa(): apply_sort([20,23,24,28],15, 'Air')
+
+#==============
+
 def LanceIncendiaire():
-    
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats
     Lance = False
-    DSorts += BuffLanceIncendiaireTotal + (18+20)/2
+    DSorts += BuffLanceIncendiaireTotal + 19  # (18+20)/2
+    Dégats += (BuffLanceIncendiaireTotal + 19)* (stats.loc['Characteristics','Feu'] + stats.loc['Characteristics','Puissance/Dommages'])/ 100
     BuffLanceIncendiaireTotal = 0
-    return
 
-# Sort Numéro 0
-def LanceAIncendie():
+# =============    
 
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
+# =============
+# SORTS COMMUNS
+# =============
 
-    if PA >= 3:
-        
-        DSorts += (23+26)/2
-        if Lance == False:
+def Flamiche(): apply_sort([8,10,10,12],5, worstElement())
+def Flamèche(): apply_sort([8,10,10,12],5, bestElement())
+def Ebilition(): apply_sort([21,24,25,29],10,'Eau',buff2 = ('Characteristics','Crit',10))
+def BoomerangDeDiamantine(): apply_sort([26,29,31,31],5,randomElement())
+
+# =============    
+
+def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False, buff2 = None, push = 0):
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, stats
+    totalCritChance = critChance+stats.loc['Characteristics','Crit'] if critChance+stats.loc['Characteristics','Crit'] < 100 else 100
+    DSorts += spellDamage(damage_range, totalCritChance)
+    Dégats += calculatedMeanDamage(damage_range, totalCritChance, Element) + push * (stats.loc['Characteristics','Level']/2+32)/4
+    BuffLanceIncendiaireTotal += buff
+    if proc:
+        if Lance:
+            LanceIncendiaire()
+        elif not muspel:
             Lance = True
-        elif Lance == True:
-            LanceIncendiaire()
-    PA -= 3
-    return
-    
-# Sort Numéro 1
-def MoulinRouge():
-    
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
 
-    if PA >= 3:
-        
-        DSorts += (28+32)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 3
-    return
-
-# Sort Numéro 2
-def Fente():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 2:
-        
-        DSorts += (12+14)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 2
-    return
-
-# Sort Numéro 3
-def FerRouge():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (27+30)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire*0.5
-    PA -= 3
-    return
-
-# Sort Numéro 4
-def EstocBrulant():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        DSorts += (25+28)/2
-        BuffLanceIncendiaireTotal += BuffLanceIncendiaire
-    PA -= 3    
-    return
-
-# Sort Numéro 5
-def Muspel():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 4:
-        
-        if Lance == True:
-            LanceIncendiaire()
-        DSorts += (31+35)/2
-    PA -= 4
-    return
-
-# Sort Numéro 6
-def Maelstom():
-
-    global Lance, DSorts, BuffLanceIncendiaire, BuffLanceIncendiaireTotal, PA
-
-    if PA >= 3:
-        
-        
-        DSorts += (16+19)/2
-        if Lance == False:
-            Lance = True
-        elif Lance == True:
-            LanceIncendiaire()
-    PA -= 3        
-    return
-
-Tour = []
-TourFiltre = []
-
-# Liste de fonctions correspondantes aux sorts feu de la Forgelance
-Sorts = (LanceAIncendie,MoulinRouge,Fente,FerRouge,EstocBrulant,Muspel,Maelstom)
+    #if buff2:
+    #    stats.loc[buff2[0],buff2[1]] += buff2[2]
 
 
-# 4 Boucle pour itérer à travers les sorts et tester toutes les combinaison possibles
-# Problèmes majeurs: 
-# Besoin de "sauvegarder" les Pa, Dégat, les Buff et l'état de la Lance à un moment donné
-# Besoin de faire une boucle par sorts lancé, serait plus pratique si ça détectait, avec les PA restants, s'il est possible de lancer un sort (utile si on se fait Re Pa)
 
-for i in range(0,len(Sorts)):
+Sorts = [LanceDuLac,EpieuSismique,LancePierre,JavelotFoudre,LanceAIncendie,Degagement,JavelyneDeMyr,FerRouge,ChargeHeroique,Effondrement,PluieDAirain,TridenDeLaMer,MoulinRouge,EstocBrulant,Octave,VoleeDAirain,Soulevement,Balestra,MoulinAVent,TalonDArgile,Fente,Kyrja,Varja,Maelstom,Ydra,LanceCyclone,Elding,Jormun,Muspel,TerreDuMilieu,Noa]
+limits = [3, 2, 3, 2, 4, 2, 3, 3, 2, 2, 2, 3, 2, 3, 3, 3, 3, 2, 2, 3, 2, 2, 2, 3, 2, 2, 3, 2, 2, 2, 2]
+pa_costs = [3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 2, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4]
 
-    PA = 12
-    BuffLanceIncendiaireTotal = 0
-    Lance = False
-    DSorts = 0
+def get_seq_from(pa, current_limits: list):
+    for i, (f, limit, cost) in enumerate(zip(Sorts, current_limits, pa_costs)):
+        if current_limits[i] > 1 and cost <= pa:
+            new_limits = current_limits.copy()
+            new_limits[i] -= 1
+            yield [i]
+            for subseq in get_seq_from(pa - cost, new_limits):
+                yield [i, *subseq]
 
-    Sorts[i]()
+def simulate_turns():
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, stats
+    tours = []
 
-    PAE1 = PA
-    DSortsE1 = DSorts
-    BuffLanceIncendiaireTotalE1 = BuffLanceIncendiaireTotal
-    LanceE1 = Lance
-    
-    for j in range(0,len(Sorts)):
+    for seq in get_seq_from(PA, limits.copy()):
+        DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, stats = initial_state
 
-        PA = PAE1
-        BuffLanceIncendiaireTotal = BuffLanceIncendiaireTotalE1
-        Lance = LanceE1
-        DSorts = DSortsE1
+        for idx in seq:
+            Sorts[idx]()
+        tours.append((*[Sorts[i].__name__ for i in seq], DSorts, Dégats))
 
-        Sorts[j]()
+    return tours
 
-        PAE2 = PA
-        DSortsE2 = DSorts
-        BuffLanceIncendiaireTotalE2 = BuffLanceIncendiaireTotal
-        LanceE2 = Lance
+tours = simulate_turns()
+tours.sort(key=lambda x:-x[-1])
+print(*tours[:5], sep='\n')
 
-        for k in range(0,len(Sorts)):
 
-            PA = PAE2
-            BuffLanceIncendiaireTotal = BuffLanceIncendiaireTotalE2
-            Lance = LanceE2
-            DSorts = DSortsE2
-
-            Sorts[k]()
-
-            PAE3 = PA
-            DSortsE3 = DSorts
-            BuffLanceIncendiaireTotalE3 = BuffLanceIncendiaireTotal
-            LanceE3 = Lance
-
-            if PA>0:
-                for l in range(0,len(Sorts)):
-
-                    PA = PAE3
-                    BuffLanceIncendiaireTotal = BuffLanceIncendiaireTotalE3
-                    Lance = LanceE3
-                    DSorts = DSortsE3
-                    
-                    Sorts[l]()
-
-                    if PA>=0:
-                        Tour.append((i,j,k,l,DSorts))
-                    else:
-                        Tour.append((i,j,k,DSortsE3))
-
-            elif PA == 0:
-
-                Tour.append((i,j,k,DSorts))
-
-# Sert a retirer les séquences de sorts où un sort a plus d'utilisation que sa limite par tour
-for sublist in Tour:
-    NBLAI = sublist.count(0)
-    NBMORO = sublist.count(1)
-    NBFENT = sublist.count(2)
-    NBFERO = sublist.count(3)
-    NBESTC = sublist.count(4)
-    NBMUS = sublist.count(5)
-    NBMAEL = sublist.count(6)
-    if NBLAI < 3 and NBFERO < 3 and NBESTC < 3 and NBMAEL < 3 and NBMORO < 2 and NBFENT < 2 and NBMUS < 2:
-        TourFiltre.append(sublist)
-
-# Détermine le maximum de dégats de sorts dans les conditions données
-GrosDégat = max_value(TourFiltre)
-
-# Print les séquences obtenant ce résultat
-for sublist in TourFiltre:
-    if GrosDégat in sublist:
-        print(sublist)
