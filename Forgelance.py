@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 buffLanceIncendiaire = 4
 niveau = 200
-PA = 12
+PA = 3
 doNeutre = 48
 terre = np.array([4.5,83]) 
 feu = np.array([4.5,74])
@@ -22,8 +22,8 @@ crit = 0.84
 doCrit = 138
 perDist = 14
 
-initial_state = (0, 0, 0, False)
-DSorts, Dégats, BuffLanceIncendiaireTotal, Lance= initial_state
+initial_state = (0, 0, 0, False, 0)
+DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, crit = initial_state
 
 # =============
 
@@ -104,14 +104,14 @@ def LanceIncendiaire():
 
 def Flamiche(): apply_sort([8,10,10,12],5, worstElement())
 def Flamèche(): apply_sort([8,10,10,12],5, bestElement())
-def Ebilition(): apply_sort([21,24,25,29],10,eau,buff2 = ('Characteristics','Crit',10))
-def BoomerangDeDiamantine(): apply_sort([26,29,31,31],5,randomElement())
+def Ebilition(): apply_sort([21,24,25,29],10, eau, ebilition = True)
+def BoomerangDeDiamantine(): apply_sort([26,29,31,31],5, randomElement())
 
 # =============    
 
-def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False, buff2 = None, push = 0):
-    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats
-    totalCritChance = critChance + crit if critChance + crit < 100 else 100
+def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False, buff2 = None, push = 0, ebilition = False):
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, crit
+    totalCritChance = critChance + crit if critChance + crit < 1 else 1
     DSorts += spellDamage(damage_range, totalCritChance)
     Dégats += calculatedMeanDamage(damage_range, totalCritChance, Element) + push * (niveau/2+32)/4
     BuffLanceIncendiaireTotal += buff
@@ -121,15 +121,15 @@ def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=Fal
         elif not muspel:
             Lance = True
 
-    #if buff2:
-    #    stats.loc[buff2[0],buff2[1]] += buff2[2]
+    #if ebilition:
+    #    crit += 0.1
 
 
 
-Sorts = [LanceDuLac,EpieuSismique,LancePierre,JavelotFoudre,LanceAIncendie,Degagement,JavelyneDeMyr,FerRouge,ChargeHeroique,Effondrement,PluieDAirain,TridenDeLaMer,MoulinRouge,EstocBrulant,Octave,VoleeDAirain,Soulevement,Balestra,MoulinAVent,TalonDArgile,Fente,Kyrja,Varja,Maelstom,Ydra,LanceCyclone,Elding,Jormun,Muspel,TerreDuMilieu,Noa]
-alternativeID = [1,0,3,2,5,4,7,6,8,10,9,12,11,14,13,16,15,18,17,20,19,22,21,24,23,26,25,28,27,30,29]
-limits = [3, 2, 3, 2, 4, 2, 3, 3, 2, 2, 2, 3, 2, 3, 3, 3, 3, 2, 2, 3, 2, 2, 2, 3, 2, 2, 3, 2, 2, 2, 2]
-pa_costs = [3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 2, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4]
+Sorts = [LanceDuLac,EpieuSismique,LancePierre,JavelotFoudre,LanceAIncendie,Degagement,JavelyneDeMyr,FerRouge,ChargeHeroique,Effondrement,PluieDAirain,TridenDeLaMer,MoulinRouge,EstocBrulant,Octave,VoleeDAirain,Soulevement,Balestra,MoulinAVent,TalonDArgile,Fente,Kyrja,Varja,Maelstom,Ydra,LanceCyclone,Elding,Jormun,Muspel,TerreDuMilieu,Noa, Ebilition]
+alternativeID = [1,0,3,2,5,4,7,6,8,10,9,12,11,14,13,16,15,18,17,20,19,22,21,24,23,26,25,28,27,30,29,30]
+limits = [3, 2, 3, 2, 4, 2, 3, 3, 2, 2, 2, 3, 2, 3, 3, 3, 3, 2, 2, 3, 2, 2, 2, 3, 2, 2, 3, 2, 2, 2, 2, 2]
+pa_costs = [3, 3, 3, 3, 3, 4, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 2, 2, 3, 4, 3, 4, 3, 4, 3, 4, 3, 4, 3]
 
 def get_seq_from(pa, current_limits: list):
     for i, (f, limit, cost) in enumerate(zip(Sorts, current_limits, pa_costs)):
@@ -142,11 +142,11 @@ def get_seq_from(pa, current_limits: list):
                 yield [i, *subseq]
 
 def simulate_turns():
-    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, crit
     tours = []
 
     for seq in get_seq_from(PA, limits.copy()):
-        DSorts, Dégats, BuffLanceIncendiaireTotal, Lance= initial_state
+        DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, crit = initial_state
 
         for idx in seq:
             Sorts[idx]()
