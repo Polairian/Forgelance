@@ -110,7 +110,7 @@ def BoomerangDeDiamantine(): apply_sort([26,29,31,31],5,randomElement())
 # =============    
 
 def apply_sort(damage_range, critChance, Element, buff=0, proc=False, muspel=False, buff2 = None, push = 0):
-    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, stats
+    global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats
     totalCritChance = critChance + crit if critChance + crit < 100 else 100
     DSorts += spellDamage(damage_range, totalCritChance)
     Dégats += calculatedMeanDamage(damage_range, totalCritChance, Element) + push * (niveau/2+32)/4
