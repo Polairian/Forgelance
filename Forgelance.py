@@ -11,7 +11,7 @@ import functools
 
 buffLanceIncendiaire = 4
 niveau = 200
-PA = 12
+PA = 3
 doNeutre = 48
 terre = np.array([4.5,83])
 feu = np.array([4.5,74])
@@ -24,18 +24,19 @@ crit = 0.84
 doCrit = 138
 perDist = 14
 
-initial_state = (0, 0, 0, False, 0)
-DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, crit = initial_state
+initial_state = (0, 0, 0, False)
+DSorts, Dégats, BuffLanceIncendiaireTotal, Lance = initial_state
 
 # =============
 
 @functools.lru_cache(maxsize=None)
-def spellDamage(critChance, *damage_range): return(np.average(damage_range[:2])* (1-critChance) + np.average(damage_range[2:])* critChance)
+def spellDamage(totalCritChance, *damage_range): 
+    return(np.average(damage_range[:2])* (1-totalCritChance) + np.average(damage_range[2:])* totalCritChance)
 
 @functools.lru_cache(maxsize=None)
-def calculatedMeanDamage(critChance, choosenStatIndex, *damage_range):
+def calculatedMeanDamage(critChance, choosenStatIndex, *damage_range, push=0):
     chosenStat = elementStat[choosenStatIndex]
-    return (spellDamage(critChance, *damage_range)* (chosenStat[0] + puissance) + chosenStat[1]  + doCrit* critChance)* (perDist/100 + 1)
+    return (spellDamage(critChance, *damage_range)* (chosenStat[0] + puissance) + chosenStat[1]  + doCrit* critChance)* (perDist/100 + 1)  + push * (niveau/2+32)/4
 
 def bestElement(): return int(np.argmax(np.array(elementStat)[:,0]))
 def worstElement(): return int(np.argmin(np.array(elementStat)[:,0]))
@@ -118,7 +119,7 @@ def apply_sort(damage_range, critChance, Element: int, buff=0, proc=False, muspe
     global Lance, DSorts, BuffLanceIncendiaireTotal, Dégats, crit
     totalCritChance = critChance + crit if critChance + crit < 1 else 1
     DSorts += spellDamage(totalCritChance, *damage_range)
-    Dégats += calculatedMeanDamage(totalCritChance, Element, *damage_range) + push * (niveau/2+32)/4
+    Dégats += calculatedMeanDamage(totalCritChance, Element, *damage_range, push)
     BuffLanceIncendiaireTotal += buff
     if proc:
         if Lance:
@@ -151,7 +152,7 @@ def simulate_turns():
     tours = []
 
     for seq in get_seq_from(PA, limits.copy()):
-        DSorts, Dégats, BuffLanceIncendiaireTotal, Lance, _ = initial_state
+        DSorts, Dégats, BuffLanceIncendiaireTotal, Lance = initial_state
 
         for idx in seq:
             Sorts[idx]()
